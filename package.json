@@ -1,0 +1,15 @@
+{
+  "name": "cabinet-engine",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cabinet quoting and calculation engine",
+  "main": "index.js",
+  "scripts": {
+    "start":  "node index.js",
+    "server": "node server.js",
+    "test":   "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

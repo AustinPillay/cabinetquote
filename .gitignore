@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Runtime outputs
+output/
+jobs/
+
+# Database files (runtime data)
+*.db
+
+# Environment variables
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

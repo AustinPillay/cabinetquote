@@ -1,0 +1,10 @@
+{
+  "name": "cabinet-quote",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "CabinetQuote local server — bridges browser app to PDF generator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

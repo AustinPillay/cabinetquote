@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CabinetQuote — Job Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0c;--s1:#141414;--s2:#1a1a1a;--s3:#222;
+  --b1:#1f1f1f;--b2:#2a2a2a;--b3:#333;
+  --acc:#c8f04a;--acc2:#f0a84a;--acc3:#4ac8f0;--red:#f05a4a;--grn:#4af07a;
+  --t1:#ebebeb;--t2:#999;--t3:#555;
+  --ff:'DM Sans',sans-serif;--fm:'DM Mono',monospace;--fd:'Bebas Neue',sans-serif;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t1);font-family:var(--ff);font-weight:300;font-size:13px}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh;width:100vw}
+.sidebar{width:230px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sb-logo{padding:16px 20px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.sb-logo-text{font-family:var(--fd);font-size:20px;letter-spacing:3px;color:var(--acc)}
+.sb-logo-text span{color:var(--t1)}
+.sb-logo-sub{font-family:var(--fm);font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:2px}
+
+.sb-scroll{flex:1;overflow-y:auto;padding:8px 0}
+.sb-section{margin-bottom:4px}
+.sb-section-label{padding:8px 20px 4px;font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase}
+
+.sb-item{
+  display:flex;align-items:center;gap:8px;width:100%;padding:7px 20px;
+  border:none;background:transparent;color:var(--t2);cursor:pointer;
+  font-family:var(--ff);font-size:12px;text-align:left;transition:all .15s;
+  border-left:2px solid transparent;
+}
+.sb-item:hover{background:var(--s2);color:var(--t1)}
+.sb-item.active{background:rgba(200,240,74,.07);color:var(--acc);border-left-color:var(--acc)}
+.sb-item .sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b3);flex-shrink:0}
+.sb-item.active .sb-dot{background:var(--acc)}
+.sb-item .sb-sub{margin-left:auto;font-family:var(--fm);font-size:9px;color:var(--t3)}
+.sb-item.wall-item{padding-left:32px;font-size:11px}
+.sb-item.wall-item .sb-dot{width:4px;height:4px}
+
+.sb-add{
+  margin:4px 16px;padding:5px;border:1px dashed var(--b2);border-radius:4px;
+  background:transparent;color:var(--t3);cursor:pointer;font-size:10px;
+  font-family:var(--fm);letter-spacing:1px;transition:all .15s;text-align:center;width:calc(100% - 32px);
+}
+.sb-add:hover{border-color:var(--acc);color:var(--acc)}
+
+.sb-footer{flex-shrink:0;padding:12px 16px;border-top:1px solid var(--b1)}
+.sb-calc-btn{
+  width:100%;padding:10px;background:var(--acc);color:#0c0c0c;
+  font-family:var(--fd);font-size:16px;letter-spacing:3px;border:none;
+  border-radius:4px;cursor:pointer;transition:opacity .15s;
+}
+.sb-calc-btn:hover{opacity:.9}
+
+/* ── TOPBAR ── */
+.topbar{
+  flex-shrink:0;display:flex;align-items:center;gap:0;
+  border-bottom:1px solid var(--b1);background:var(--s1);
+}
+.topbar-tab{
+  padding:12px 20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;border:none;background:transparent;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;
+}
+.topbar-tab:hover{color:var(--t1)}
+.topbar-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.topbar-right{margin-left:auto;display:flex;gap:6px;padding:0 16px}
+
+/* ── CONTENT AREA ── */
+.page{display:none;flex:1;overflow-y:auto;padding:24px}
+.page.active{display:block}
+
+/* ── FORM ELEMENTS ── */
+.field{display:flex;flex-direction:column;gap:4px}
+.label{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase}
+.input,.select{
+  background:var(--s2);border:1px solid var(--b2);color:var(--t1);
+  font-family:var(--fm);font-size:12px;padding:8px 10px;border-radius:4px;
+  outline:none;transition:border-color .15s;width:100%;
+}
+.input:focus,.select:focus{border-color:var(--acc)}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23555'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+.input::placeholder{color:var(--t3)}
+.toggle-row{display:flex;gap:3px}
+.tog{
+  flex:1;padding:7px 4px;text-align:center;border:1px solid var(--b2);border-radius:3px;
+  cursor:pointer;font-size:10px;font-family:var(--fm);color:var(--t3);transition:all .15s;
+}
+.tog.on{background:rgba(200,240,74,.1);border-color:var(--acc);color:var(--acc)}
+.tog.on.blue{background:rgba(74,200,240,.1);border-color:var(--acc3);color:var(--acc3)}
+.tog.on.amber{background:rgba(240,168,74,.1);border-color:var(--acc2);color:var(--acc2)}
+
+/* ── BUTTONS ── */
+.btn{
+  font-family:var(--fm);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 16px;border:1px solid var(--b2);border-radius:4px;cursor:pointer;
+  background:transparent;color:var(--t2);transition:all .15s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.pri{background:var(--acc);color:#0c0c0c;border-color:var(--acc)}
+.btn.pri:hover{opacity:.9}
+.btn.sec{border-color:var(--acc3);color:var(--acc3)}
+.btn.amber{border-color:var(--acc2);color:var(--acc2)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.sm{padding:5px 10px;font-size:9px}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.card-header{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--b1);cursor:pointer;user-select:none;
+}
+.card-title{font-family:var(--fd);font-size:18px;letter-spacing:2px}
+.card-body{padding:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:24px}
+.page-title{font-family:var(--fd);font-size:32px;letter-spacing:3px;line-height:1}
+.page-sub{font-size:11px;color:var(--t3);margin-top:4px;font-family:var(--fm)}
+
+/* ── HEIGHT CHIPS ── */
+.height-chips{display:flex;gap:8px;margin-top:12px}
+.hchip{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border:1px solid var(--b2);border-radius:5px;background:var(--s2);
+}
+.hchip-dot{width:7px;height:7px;border-radius:50%}
+.hchip-label{font-size:9px;color:var(--t3);font-family:var(--fm);letter-spacing:1px}
+.hchip-val{font-family:var(--fm);font-size:14px;font-weight:500}
+
+/* ── CABINET CARDS ── */
+.cab-card{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  background:var(--s2);border:1px solid var(--b1);border-radius:6px;
+  margin-bottom:6px;transition:border-color .15s;
+}
+.cab-card:hover{border-color:var(--b3)}
+.cab-card.selected{border-color:var(--acc);background:rgba(200,240,74,.04)}
+.type-badge{
+  font-family:var(--fm);font-size:8px;letter-spacing:1px;padding:3px 7px;
+  border-radius:3px;text-transform:uppercase;flex-shrink:0;
+}
+.type-badge.base{background:rgba(200,240,74,.12);color:var(--acc);border:1px solid rgba(200,240,74,.2)}
+.type-badge.wall{background:rgba(74,200,240,.12);color:var(--acc3);border:1px solid rgba(74,200,240,.2)}
+.type-badge.tall{background:rgba(240,168,74,.12);color:var(--acc2);border:1px solid rgba(240,168,74,.2)}
+.cab-name{font-size:12px;font-weight:400;flex:1}
+.cab-specs{font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:2px}
+.cab-cost{font-family:var(--fm);font-size:11px;color:var(--acc);margin-left:auto;white-space:nowrap}
+.icon-btn{
+  width:24px;height:24px;border-radius:3px;border:1px solid var(--b2);
+  background:transparent;color:var(--t3);cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;
+}
+.icon-btn:hover{border-color:var(--acc2);color:var(--acc2)}
+.icon-btn.del:hover{border-color:var(--red);color:var(--red)}
+.htag{font-size:8px;padding:2px 5px;border-radius:2px;font-family:var(--fm);margin-left:4px}
+.htag.auto{background:rgba(200,240,74,.1);color:var(--acc)}
+.htag.custom{background:rgba(240,168,74,.1);color:var(--acc2)}
+
+/* ── ADD CABINET PANEL ── */
+.add-panel{
+  background:var(--s1);border:1px solid var(--b1);border-radius:8px;
+  padding:16px;margin-top:8px;
+}
+.add-panel-title{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:var(--acc);margin-bottom:14px;text-transform:uppercase}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{
+  text-align:left;padding:7px 10px;font-family:var(--fm);font-size:9px;
+  letter-spacing:1px;color:var(--t3);border-bottom:1px solid var(--b2);
+  text-transform:uppercase;font-weight:400;background:var(--s2);
+}
+.tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;font-family:var(--fm)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,0.02)}
+.tbl td.right{text-align:right}
+.tbl td.mono{font-family:var(--fm)}
+.tbl input.inline{
+  background:transparent;border:none;color:var(--t1);font-family:var(--fm);
+  font-size:11px;width:60px;padding:2px 4px;border-bottom:1px solid var(--b2);outline:none;
+}
+.tbl input.inline:focus{border-bottom-color:var(--acc)}
+.tbl td.acc{color:var(--acc)}
+.tbl td.amber{color:var(--acc2)}
+.mat-group{background:var(--s2);font-family:var(--fd);font-size:13px;letter-spacing:2px;color:var(--t2);padding:8px 10px;border-bottom:1px solid var(--b2)}
+
+/* ── QUOTATION PAGE ── */
+.room-block{margin-bottom:16px}
+.room-block-header{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--s2);border:1px solid var(--b1);border-radius:6px 6px 0 0;
+  cursor:pointer;user-select:none;
+}
+.room-block-title{font-family:var(--fd);font-size:17px;letter-spacing:2px;flex:1}
+.room-block-total{font-family:var(--fm);font-size:13px;color:var(--acc2)}
+.chevron{font-size:10px;color:var(--t3);transition:transform .2s}
+.room-block.open .chevron{transform:rotate(90deg)}
+.room-block-body{display:none;border:1px solid var(--b1);border-top:none;border-radius:0 0 6px 6px;overflow:hidden}
+.room-block.open .room-block-body{display:block}
+.wall-group{border-bottom:1px solid var(--b1)}
+.wall-group:last-child{border-bottom:none}
+.wall-group-header{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--s1);border-bottom:1px solid var(--b1);cursor:pointer;
+}
+.wall-group-name{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:var(--t2);text-transform:uppercase;flex:1}
+.wall-group-sub{font-family:var(--fm);font-size:10px;color:var(--t3)}
+.wall-group-body{display:none}
+.wall-group.open .wall-group-body{display:block}
+.summary-row{display:flex;justify-content:space-between;padding:6px 14px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.03)}
+.summary-row .lbl{color:var(--t3);font-family:var(--fm)}
+.summary-row .val{font-family:var(--fm);color:var(--t1)}
+.summary-row.total{background:var(--s2);padding:10px 14px}
+.summary-row.total .lbl{color:var(--t1);font-weight:500}
+.summary-row.total .val{color:var(--acc);font-size:13px}
+
+/* ── GRAND TOTAL BAR ── */
+.grand-total-bar{
+  background:var(--s2);border:1px solid var(--b1);border-radius:8px;
+  padding:16px 20px;display:flex;align-items:center;gap:24px;margin-bottom:20px;
+}
+.gt-stat{display:flex;flex-direction:column;gap:2px}
+.gt-label{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--t3);text-transform:uppercase}
+.gt-value{font-family:var(--fm);font-size:16px;color:var(--t1)}
+.gt-value.big{font-family:var(--fd);font-size:28px;color:var(--acc);letter-spacing:2px}
+.gt-div{width:1px;height:36px;background:var(--b2)}
+.gt-actions{margin-left:auto;display:flex;gap:8px}
+
+/* ── HARDWARE PAGE ── */
+.hw-group{margin-bottom:16px}
+.hw-group-header{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--s2);border:1px solid var(--b1);border-radius:6px 6px 0 0;
+}
+.hw-group-title{font-family:var(--fd);font-size:15px;letter-spacing:2px;flex:1}
+.hw-group-body{border:1px solid var(--b1);border-top:none;border-radius:0 0 6px 6px;overflow:hidden}
+
+/* ── EXPORT PAGE ── */
+.export-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.export-card{
+  background:var(--s1);border:1px solid var(--b1);border-radius:8px;
+  padding:24px;display:flex;flex-direction:column;gap:16px;
+}
+.export-icon{font-size:32px;opacity:.6}
+.export-title{font-family:var(--fd);font-size:20px;letter-spacing:2px}
+.export-desc{font-size:11px;color:var(--t3);line-height:1.6}
+.export-for{font-family:var(--fm);font-size:9px;letter-spacing:1px;color:var(--t3);text-transform:uppercase;margin-top:auto}
+.export-recipient{font-family:var(--fm);font-size:12px;color:var(--acc2);margin-top:2px}
+
+/* ── DIVIDERS ── */
+.divider{height:1px;background:var(--b1);margin:16px 0}
+.section-title{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--acc);text-transform:uppercase;margin-bottom:10px}
+.row-flex{display:flex;align-items:center;gap:8px}
+.spacer{flex:1}
+.mono{font-family:var(--fm)}
+.muted{color:var(--t3)}
+.mt8{margin-top:8px}
+.mt16{margin-top:16px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-text">CABINET<span>QUOTE</span></div>
+    <div class="sb-logo-sub">JOB BUILDER v1.0</div>
+  </div>
+
+  <div class="sb-scroll" id="sbScroll">
+    <div class="sb-section">
+      <div class="sb-section-label">Job</div>
+      <button class="sb-item active" onclick="nav('job')">
+        <span class="sb-dot"></span> Job Details
+      </button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-label">Rooms</div>
+      <div id="roomNav"></div>
+      <button class="sb-add" id="addRoomBtn" onclick="openAddRoom()">+ Add Room</button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-label">Results</div>
+      <button class="sb-item" onclick="nav('quote')">
+        <span class="sb-dot"></span> Quotation
+      </button>
+      <button class="sb-item" onclick="nav('cutlist')">
+        <span class="sb-dot"></span> Cutting List
+      </button>
+      <button class="sb-item" onclick="nav('hardware')">
+        <span class="sb-dot"></span> Hardware List
+      </button>
+      <button class="sb-item" onclick="nav('export')">
+        <span class="sb-dot"></span> Export PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="sb-footer">
+    <button class="sb-calc-btn" onclick="calculateAll()">CALCULATE JOB</button>
+  </div>
+</div>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+
+  <!-- Topbar breadcrumb -->
+  <div class="topbar">
+    <div id="breadcrumb" style="padding:12px 20px;font-family:var(--fm);font-size:10px;color:var(--t3);letter-spacing:1px">
+      JOB BUILDER
+    </div>
+    <div class="topbar-right">
+      <button class="btn sm" onclick="saveJob()">Save</button>
+      <button class="btn sm" onclick="loadJob()">Load</button>
+    </div>
+  </div>
+
+  <!-- ── PAGE: JOB DETAILS ── -->
+  <div class="page active" id="page-job">
+    <div class="page-header">
+      <div class="page-title">JOB DETAILS</div>
+      <div class="page-sub">Client information and job settings</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">CLIENT</div></div>
+      <div class="card-body">
+        <div class="grid-3" style="margin-bottom:12px">
+          <div class="field"><div class="label">Client Name</div><input class="input" id="clientName" placeholder="e.g. John Smith"/></div>
+          <div class="field"><div class="label">Phone</div><input class="input" id="clientPhone" placeholder="+27 xx xxx xxxx"/></div>
+          <div class="field"><div class="label">Email</div><input class="input" id="clientEmail" placeholder="client@email.com"/></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><div class="label">Address</div><input class="input" id="clientAddr" placeholder="Street address"/></div>
+          <div class="field"><div class="label">Reference / Job No.</div><input class="input" id="jobRef" placeholder="Auto-generated if blank"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">JOB SETTINGS</div></div>
+      <div class="card-body">
+        <div class="grid-4">
+          <div class="field"><div class="label">Labour Rate (R/m)</div><input class="input" id="labourRate" value="310" type="number"/></div>
+          <div class="field"><div class="label">Wastage %</div><input class="input" id="wastageRate" value="20" type="number"/></div>
+          <div class="field"><div class="label">Profit %</div><input class="input" id="profitRate" value="30" type="number"/></div>
+          <div class="field"><div class="label">Commission %</div><input class="input" id="commRate" value="10" type="number"/></div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-title">Transport (optional)</div>
+        <div class="grid-4">
+          <div class="field"><div class="label">Distance (km)</div><input class="input" id="transDist" placeholder="0"/></div>
+          <div class="field"><div class="label">Vehicles</div><input class="input" id="transVeh" placeholder="1"/></div>
+          <div class="field"><div class="label">Trips</div><input class="input" id="transTrips" placeholder="1"/></div>
+          <div class="field"><div class="label">Fuel (R/litre)</div><input class="input" id="transFuel" value="25"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button class="btn pri" onclick="openAddRoom()">Next — Add First Room →</button>
+    </div>
+  </div>
+
+  <!-- ── PAGE: ADD / EDIT ROOM ── -->
+  <div class="page" id="page-addroom">
+    <div class="page-header">
+      <div class="page-title" id="addRoomTitle">ADD ROOM</div>
+      <div class="page-sub">Set room dimensions — heights are auto-calculated from these</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">ROOM INFO</div></div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="field"><div class="label">Room Name</div><input class="input" id="roomName" placeholder="e.g. Kitchen, Main Bedroom"/></div>
+          <div class="field"><div class="label">Notes</div><input class="input" id="roomNotes" placeholder="Optional notes"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">ROOM DIMENSIONS</div></div>
+      <div class="card-body">
+        <div class="grid-3" style="margin-bottom:12px">
+          <div class="field"><div class="label">Ceiling Height (mm)</div><input class="input" id="rCeiling" value="2400" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Plinth Height (mm)</div><input class="input" id="rPlinth" value="100" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Base Unit Total Height (mm)</div><input class="input" id="rBaseTotal" value="880" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Countertop Thickness (mm)</div><input class="input" id="rCounter" value="20" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Wall Space (mm)</div><input class="input" id="rWallSpace" value="600" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Capping Height (mm)</div><input class="input" id="rCapping" value="100" type="number" oninput="updateHeightPreview()"/></div>
+          <div class="field"><div class="label">Base Depth (mm)</div><input class="input" id="rBaseDepth" value="560" type="number"/></div>
+          <div class="field"><div class="label">Wall Depth (mm)</div><input class="input" id="rWallDepth" value="300" type="number"/></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Auto-calculated heights</div>
+        <div class="height-chips">
+          <div class="hchip">
+            <div class="hchip-dot" style="background:var(--acc)"></div>
+            <div><div class="hchip-label">BASE CARCASS</div><div class="hchip-val" id="hBase" style="color:var(--acc)">780mm</div><div style="font-size:9px;color:var(--t3);font-family:var(--fm)" id="hBaseFormula">880 − 100</div></div>
+          </div>
+          <div class="hchip">
+            <div class="hchip-dot" style="background:var(--acc3)"></div>
+            <div><div class="hchip-label">WALL UNIT</div><div class="hchip-val" id="hWall" style="color:var(--acc3)">800mm</div><div style="font-size:9px;color:var(--t3);font-family:var(--fm)" id="hWallFormula">2400−880−20−600−100</div></div>
+          </div>
+          <div class="hchip">
+            <div class="hchip-dot" style="background:var(--acc2)"></div>
+            <div><div class="hchip-label">TALL UNIT</div><div class="hchip-val" id="hTall" style="color:var(--acc2)">2200mm</div><div style="font-size:9px;color:var(--t3);font-family:var(--fm)" id="hTallFormula">2400−100−100</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button class="btn" onclick="nav('job')">Cancel</button>
+      <button class="btn pri" onclick="saveRoom()">Save Room — Add Walls →</button>
+    </div>
+  </div>
+
+  <!-- ── PAGE: WALL / CABINETS ── -->
+  <div class="page" id="page-wall">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="page-title" id="wallPageTitle">SINK SIDE</div>
+        <div class="page-sub" id="wallPageSub">Kitchen · 0 cabinets</div>
+        <div class="height-chips" id="wallHeightChips" style="margin-top:8px"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn sm" id="prevWallBtn" onclick="prevWall()">← Prev Wall</button>
+        <button class="btn sm sec" id="nextWallBtn" onclick="nextWall()">Next Wall →</button>
+      </div>
+    </div>
+
+    <!-- Cabinet list -->
+    <div class="section-title">Cabinets on this wall</div>
+    <div id="cabList"></div>
+
+    <!-- Add cabinet panel -->
+    <div class="add-panel" id="addCabPanel">
+      <div class="add-panel-title" id="addCabTitle">+ Add Cabinet</div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="field"><div class="label">Label</div><input class="input" id="cabLabel" placeholder="e.g. Sink Base"/></div>
+        <div class="field">
+          <div class="label">Type</div>
+          <div class="toggle-row">
+            <div class="tog on" onclick="setType('base',this)">Base</div>
+            <div class="tog" onclick="setType('wall',this)">Wall</div>
+            <div class="tog" onclick="setType('tall',this)">Tall</div>
+          </div>
+        </div>
+        <div class="field"><div class="label">Number of Units</div><input class="input" id="cabUnits" value="1" type="number" min="1"/></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="field"><div class="label">Width (mm)</div><input class="input" id="cabW" placeholder="600" type="number"/></div>
+        <div class="field"><div class="label">Depth (mm)</div><input class="input" id="cabD" placeholder="560" type="number" id="cabD"/></div>
+        <div class="field">
+          <div class="label">Height</div>
+          <div class="toggle-row" style="margin-bottom:4px">
+            <div class="tog on" id="togAuto" onclick="setHeightMode('auto')">Auto</div>
+            <div class="tog" id="togCustom" onclick="setHeightMode('custom')">Custom</div>
+          </div>
+          <input class="input" id="cabH" placeholder="auto" style="display:none" type="number"/>
+          <div id="cabHPreview" style="font-family:var(--fm);font-size:11px;color:var(--acc);padding:4px 0"></div>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="field">
+          <div class="label">Carcass Material</div>
+          <select class="select" id="cabCarcass">
+            <option value="PGB-GW">Gloss White — R2700/sheet</option>
+            <option value="PGB-MW">Matte White — R2200/sheet</option>
+            <option value="PGB-WM">White Melamine — R800/sheet</option>
+            <option value="PGB-CM">Caraz Matt — R2400/sheet</option>
+            <option value="PGB-NT">Napoca SupaTexture — R2600/sheet</option>
+            <option value="PGB-LO">Melamine Light Oak — R950/sheet</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="label">External / Door Material</div>
+          <select class="select" id="cabExternal">
+            <option value="PGB-GWE">Gloss White Ext — R3300/sheet</option>
+            <option value="PGB-MWE">Matte White Ext — R4000/sheet</option>
+            <option value="PGB-GAE">Gloss Anthracite — R3500/sheet</option>
+            <option value="PGB-MAE">Matte Anthracite — R4200/sheet</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="label">Hinges</div>
+          <select class="select" id="cabHinge">
+            <option value="softClose">Soft Close — R8 each</option>
+            <option value="normal">Normal — R5.75 each</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:10px">
+        <div class="field">
+          <div class="label">Handles</div>
+          <select class="select" id="cabHandle">
+            <option value="handle192mm">192mm Chrome — R45</option>
+            <option value="handle128mm">128mm Chrome — R35</option>
+            <option value="handle192mm-blk">192mm Matt Black — R50</option>
+            <option value="gola">Gola Profile — R250/3m</option>
+            <option value="none">No Handles</option>
+          </select>
+        </div>
+        <div class="field"><div class="label">Doors</div><input class="input" id="cabDoors" value="1" type="number" min="0"/></div>
+        <div class="field"><div class="label">Drawers</div><input class="input" id="cabDrawers" value="0" type="number" min="0"/></div>
+      </div>
+      <div class="grid-4" style="margin-bottom:14px">
+        <div class="field"><div class="label">Shelves</div><input class="input" id="cabShelves" value="1" type="number" min="0"/></div>
+        <div class="field"><div class="label">Seen End</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Back Board</div><div class="toggle-row"><div class="tog on" onclick="togOpt(this)">Yes</div><div class="tog" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Capping</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Skirting</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Masonite</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Hanging Rail</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+        <div class="field"><div class="label">Seen End Right</div><div class="toggle-row"><div class="tog" onclick="togOpt(this)">Yes</div><div class="tog on" onclick="togOpt(this)">No</div></div></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="clearCabForm()">Clear</button>
+        <button class="btn pri" onclick="addCabinet()">Add Cabinet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: QUOTATION ── -->
+  <div class="page" id="page-quote">
+    <div class="page-header">
+      <div class="page-title">QUOTATION</div>
+      <div class="page-sub" id="quoteClient">—</div>
+    </div>
+
+    <div class="grand-total-bar" id="grandTotalBar">
+      <div class="gt-stat"><div class="gt-label">Rooms</div><div class="gt-value" id="gtRooms">0</div></div>
+      <div class="gt-div"></div>
+      <div class="gt-stat"><div class="gt-label">Cabinets</div><div class="gt-value" id="gtCabs">0</div></div>
+      <div class="gt-div"></div>
+      <div class="gt-stat"><div class="gt-label">Board Cost</div><div class="gt-value" id="gtBoard">R 0.00</div></div>
+      <div class="gt-div"></div>
+      <div class="gt-stat"><div class="gt-label">Hardware</div><div class="gt-value" id="gtHW">R 0.00</div></div>
+      <div class="gt-div"></div>
+      <div class="gt-stat"><div class="gt-label">Labour</div><div class="gt-value" id="gtLabour">R 0.00</div></div>
+      <div class="gt-div"></div>
+      <div class="gt-stat"><div class="gt-label">Grand Total</div><div class="gt-value big" id="gtTotal">R 0.00</div></div>
+      <div class="gt-actions">
+        <button class="btn" onclick="nav('export')">Export PDF</button>
+      </div>
+    </div>
+
+    <div id="quoteRooms"></div>
+  </div>
+
+  <!-- ── PAGE: CUTTING LIST ── -->
+  <div class="page" id="page-cutlist">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="page-title">CUTTING LIST</div>
+        <div class="page-sub">Panels grouped by material — edit quantities and sizes as needed</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn sm" onclick="addCutPanel()">+ Add Panel</button>
+        <button class="btn sm amber" onclick="nav('export')">Export Board List</button>
+      </div>
+    </div>
+    <div id="cutlistContent"></div>
+  </div>
+
+  <!-- ── PAGE: HARDWARE LIST ── -->
+  <div class="page" id="page-hardware">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="page-title">HARDWARE LIST</div>
+        <div class="page-sub">All hardware grouped by category — adjust quantities or add items</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn sm" onclick="addHWItem()">+ Add Item</button>
+        <button class="btn sm amber" onclick="nav('export')">Export Hardware List</button>
+      </div>
+    </div>
+    <div id="hardwareContent"></div>
+  </div>
+
+  <!-- ── PAGE: EXPORT ── -->
+  <div class="page" id="page-export">
+    <div class="page-header">
+      <div class="page-title">EXPORT</div>
+      <div class="page-sub">Generate PDF documents for client, supplier, and workshop</div>
+    </div>
+
+    <div class="export-grid">
+      <div class="export-card">
+        <div class="export-icon">📄</div>
+        <div class="export-title">QUOTATION</div>
+        <div class="export-desc">Full price breakdown by room. Cabinet costs, totals, profit and commission. No panel sizes.</div>
+        <div>
+          <div class="export-for">FOR</div>
+          <div class="export-recipient">Client</div>
+        </div>
+        <button class="btn pri" onclick="exportPDF('quote')">Generate Quote PDF</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">📐</div>
+        <div class="export-title">BOARD LIST</div>
+        <div class="export-desc">All panels with exact cut sizes, grouped by material. Sheet count and edging requirements.</div>
+        <div>
+          <div class="export-for">FOR</div>
+          <div class="export-recipient">Board Supplier / Workshop</div>
+        </div>
+        <button class="btn amber" onclick="exportPDF('cutlist')">Generate Board List PDF</button>
+      </div>
+      <div class="export-card">
+        <div class="export-icon">🔩</div>
+        <div class="export-title">HARDWARE LIST</div>
+        <div class="export-desc">Itemised hardware order sheet with quantities and prices. Grouped by category.</div>
+        <div>
+          <div class="export-for">FOR</div>
+          <div class="export-recipient">Hardware Supplier / Ordering</div>
+        </div>
+        <button class="btn sec" onclick="exportPDF('hardware')">Generate Hardware PDF</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-title">Full Package</div>
+    <div class="card">
+      <div class="card-body" style="display:flex;align-items:center;gap:16px">
+        <div style="flex:1;font-size:12px;color:var(--t3)">Generate all three documents at once — quote, board list, and hardware list as separate PDFs.</div>
+        <button class="btn pri" style="font-size:12px;padding:10px 24px" onclick="exportPDF('all')">Export All Three PDFs</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+const state = {
+  client: {},
+  settings: {},
+  rooms: [],
+  currentRoomIdx: null,
+  currentWallIdx: null,
+  editingCabIdx: null,
+  currentCabType: 'base',
+  heightMode: 'auto',
+  calculated: false,
+};
+
+const BOARD_T = 16;
+const DOOR_GAP = 4;
+const RAIL_H = 70;
+
+// Material prices
+const MATERIALS = {
+  'PGB-GW':  { name:'Gloss White (Supagloss)',    cost:2700, ew:2750, eh:1830, edging:15 },
+  'PGB-MW':  { name:'Matte White (Supamatt)',      cost:2200, ew:2750, eh:1830, edging:15 },
+  'PGB-WM':  { name:'White Melamine',              cost:800,  ew:2750, eh:1830, edging:10 },
+  'PGB-CM':  { name:'Caraz Matt (Light Grey)',     cost:2400, ew:2750, eh:1830, edging:15 },
+  'PGB-NT':  { name:'Napoca SupaTexture (Walnut)', cost:2600, ew:2750, eh:1830, edging:18 },
+  'PGB-LO':  { name:'Melamine Light Oak',          cost:950,  ew:2750, eh:1830, edging:10 },
+  'PGB-GWE': { name:'Gloss White External',        cost:3300, ew:2750, eh:1830, edging:25 },
+  'PGB-MWE': { name:'Matte White External',        cost:4000, ew:2750, eh:1830, edging:25 },
+  'PGB-GAE': { name:'Gloss Anthracite',            cost:3500, ew:2750, eh:1830, edging:25 },
+  'PGB-MAE': { name:'Matte Anthracite',            cost:4200, ew:2750, eh:1830, edging:25 },
+  'MAS-3MM': { name:'Masonite 3mm',               cost:300,  ew:2750, eh:1830, edging:0  },
+  'PGB-BB3': { name:'Back Board 3mm',              cost:650,  ew:2750, eh:1830, edging:0  },
+};
+
+const HINGE_PRICES = { softClose:8, normal:5.75 };
+const HANDLE_PRICES = { 'handle192mm':45, 'handle128mm':35, 'handle192mm-blk':50, 'gola':250, 'none':0 };
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('breadcrumb').textContent = page.toUpperCase().replace('-',' › ');
+}
+
+function navWall(roomIdx, wallIdx) {
+  state.currentRoomIdx = roomIdx;
+  state.currentWallIdx = wallIdx;
+  renderWallPage();
+  nav('wall');
+  updateSidebarNav();
+}
+
+function updateSidebarNav() {
+  const nav = document.getElementById('roomNav');
+  nav.innerHTML = '';
+  state.rooms.forEach((room, ri) => {
+    const rb = document.createElement('button');
+    rb.className = 'sb-item' + (state.currentRoomIdx === ri && state.currentWallIdx === null ? ' active' : '');
+    rb.innerHTML = `<span class="sb-dot"></span> ${room.name} <span class="sb-sub">${countCabs(ri)} cab</span>`;
+    rb.onclick = () => { state.currentRoomIdx = ri; state.currentWallIdx = 0; navWall(ri, 0); };
+    nav.appendChild(rb);
+
+    room.walls.forEach((wall, wi) => {
+      const wb = document.createElement('button');
+      wb.className = 'sb-item wall-item' + (state.currentRoomIdx === ri && state.currentWallIdx === wi ? ' active' : '');
+      wb.innerHTML = `<span class="sb-dot"></span> ${wall.name} <span class="sb-sub">${wall.cabinets.length}</span>`;
+      wb.onclick = () => navWall(ri, wi);
+      nav.appendChild(wb);
+    });
+
+    const addWall = document.createElement('button');
+    addWall.className = 'sb-add';
+    addWall.textContent = '+ Add Wall';
+    addWall.style.marginLeft = '16px';
+    addWall.style.width = 'calc(100% - 48px)';
+    addWall.onclick = () => openAddWall(ri);
+    nav.appendChild(addWall);
+  });
+}
+
+function countCabs(ri) {
+  return state.rooms[ri]?.walls.reduce((s, w) => s + w.cabinets.length, 0) || 0;
+}
+
+// ════════════════════════════════════════
+// ROOM
+// ════════════════════════════════════════
+function openAddRoom() {
+  document.getElementById('addRoomTitle').textContent = 'ADD ROOM';
+  document.getElementById('roomName').value = '';
+  document.getElementById('roomNotes').value = '';
+  updateHeightPreview();
+  nav('addroom');
+}
+
+function saveRoom() {
+  const name = document.getElementById('roomName').value.trim();
+  if (!name) { alert('Please enter a room name.'); return; }
+  const room = {
+    name,
+    notes: document.getElementById('roomNotes').value,
+    ceiling:   +document.getElementById('rCeiling').value,
+    plinth:    +document.getElementById('rPlinth').value,
+    baseTotal: +document.getElementById('rBaseTotal').value,
+    counter:   +document.getElementById('rCounter').value,
+    wallSpace: +document.getElementById('rWallSpace').value,
+    capping:   +document.getElementById('rCapping').value,
+    baseDepth: +document.getElementById('rBaseDepth').value,
+    wallDepth: +document.getElementById('rWallDepth').value,
+    walls: [{ name:'Wall A', cabinets:[] }],
+  };
+  state.rooms.push(room);
+  state.currentRoomIdx = state.rooms.length - 1;
+  state.currentWallIdx = 0;
+  updateSidebarNav();
+  navWall(state.currentRoomIdx, 0);
+}
+
+function openAddWall(ri) {
+  const name = prompt('Wall name (e.g. Sink Side, Hob Side):');
+  if (!name) return;
+  state.rooms[ri].walls.push({ name, cabinets:[] });
+  updateSidebarNav();
+  navWall(ri, state.rooms[ri].walls.length - 1);
+}
+
+function updateHeightPreview() {
+  const c  = +document.getElementById('rCeiling').value  || 2400;
+  const p  = +document.getElementById('rPlinth').value   || 100;
+  const bt = +document.getElementById('rBaseTotal').value || 880;
+  const co = +document.getElementById('rCounter').value  || 20;
+  const ws = +document.getElementById('rWallSpace').value || 600;
+  const ca = +document.getElementById('rCapping').value  || 100;
+  const base = bt - p;
+  const wall = c - bt - co - ws - ca;
+  const tall = c - p - ca;
+  document.getElementById('hBase').textContent = base + 'mm';
+  document.getElementById('hWall').textContent = wall + 'mm';
+  document.getElementById('hTall').textContent = tall + 'mm';
+  document.getElementById('hBaseFormula').textContent = `${bt} − ${p}`;
+  document.getElementById('hWallFormula').textContent = `${c}−${bt}−${co}−${ws}−${ca}`;
+  document.getElementById('hTallFormula').textContent = `${c}−${p}−${ca}`;
+}
+
+function autoHeights(room) {
+  return {
+    base: room.baseTotal - room.plinth,
+    wall: room.ceiling - room.baseTotal - room.counter - room.wallSpace - room.capping,
+    tall: room.ceiling - room.plinth - room.capping,
+  };
+}
+
+// ════════════════════════════════════════
+// WALL PAGE
+// ════════════════════════════════════════
+function renderWallPage() {
+  const room = state.rooms[state.currentRoomIdx];
+  const wall = room.walls[state.currentWallIdx];
+  const h    = autoHeights(room);
+
+  document.getElementById('wallPageTitle').textContent = wall.name.toUpperCase();
+  document.getElementById('wallPageSub').textContent   = `${room.name} · ${wall.cabinets.length} cabinet${wall.cabinets.length !== 1 ? 's' : ''}`;
+
+  // Height chips
+  const chips = document.getElementById('wallHeightChips');
+  chips.innerHTML = `
+    <div class="hchip"><div class="hchip-dot" style="background:var(--acc)"></div><div><div class="hchip-label">BASE</div><div class="hchip-val" style="color:var(--acc)">${h.base}mm</div></div></div>
+    <div class="hchip"><div class="hchip-dot" style="background:var(--acc3)"></div><div><div class="hchip-label">WALL</div><div class="hchip-val" style="color:var(--acc3)">${h.wall}mm</div></div></div>
+    <div class="hchip"><div class="hchip-dot" style="background:var(--acc2)"></div><div><div class="hchip-label">TALL</div><div class="hchip-val" style="color:var(--acc2)">${h.tall}mm</div></div></div>`;
+
+  // Navigation buttons
+  document.getElementById('prevWallBtn').style.opacity = state.currentWallIdx > 0 ? '1' : '0.3';
+  document.getElementById('nextWallBtn').style.opacity = state.currentWallIdx < room.walls.length - 1 ? '1' : '0.3';
+
+  // Update depth defaults
+  document.getElementById('cabD').value = '';
+  document.getElementById('cabD').placeholder = state.currentCabType === 'wall' ? room.wallDepth : room.baseDepth;
+
+  renderCabList();
+  updateHeightDisplay();
+}
+
+function renderCabList() {
+  const room = state.rooms[state.currentRoomIdx];
+  const wall = room.walls[state.currentWallIdx];
+  const h    = autoHeights(room);
+  const list = document.getElementById('cabList');
+
+  if (!wall.cabinets.length) {
+    list.innerHTML = '<div style="color:var(--t3);font-size:11px;padding:12px 0;font-family:var(--fm)">No cabinets yet — add your first cabinet below.</div>';
+    return;
+  }
+
+  list.innerHTML = wall.cabinets.map((c, i) => {
+    const height = c.customHeight || h[c.type];
+    const htag   = c.customHeight ? `<span class="htag custom">custom</span>` : `<span class="htag auto">auto</span>`;
+    const mat    = MATERIALS[c.carcass]?.name || c.carcass;
+    return `
+    <div class="cab-card" id="cabcard-${i}">
+      <span class="type-badge ${c.type}">${c.type}</span>
+      <div style="flex:1">
+        <div class="cab-name">${c.label || 'Unnamed'} ${htag}</div>
+        <div class="cab-specs">${c.units}× · ${c.width}W×${c.depth}D×${height}H mm · ${mat} · ${c.doors} door${c.doors!==1?'s':''} · ${c.drawers} drawer${c.drawers!==1?'s':''} · ${c.hinge} · ${c.shelves} shelf</div>
+      </div>
+      <div class="cab-card-actions" style="display:flex;gap:4px">
+        <button class="icon-btn" onclick="editCab(${i})">✎</button>
+        <button class="icon-btn del" onclick="deleteCab(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function prevWall() {
+  if (state.currentWallIdx > 0) navWall(state.currentRoomIdx, state.currentWallIdx - 1);
+}
+function nextWall() {
+  const room = state.rooms[state.currentRoomIdx];
+  if (state.currentWallIdx < room.walls.length - 1) navWall(state.currentRoomIdx, state.currentWallIdx + 1);
+}
+
+// ════════════════════════════════════════
+// CABINET FORM
+// ════════════════════════════════════════
+function setType(type, el) {
+  state.currentCabType = type;
+  document.querySelectorAll('#addCabPanel .tog').forEach(t => {
+    if (['Base','Wall','Tall'].includes(t.textContent)) t.classList.remove('on');
+  });
+  el.classList.add('on');
+  const room = state.rooms[state.currentRoomIdx];
+  document.getElementById('cabD').placeholder = type === 'wall' ? room.wallDepth : room.baseDepth;
+  updateHeightDisplay();
+}
+
+function setHeightMode(mode) {
+  state.heightMode = mode;
+  document.getElementById('togAuto').classList.toggle('on', mode === 'auto');
+  document.getElementById('togCustom').classList.toggle('on', mode === 'custom');
+  document.getElementById('cabH').style.display = mode === 'custom' ? 'block' : 'none';
+  document.getElementById('cabHPreview').style.display = mode === 'auto' ? 'block' : 'none';
+  updateHeightDisplay();
+}
+
+function updateHeightDisplay() {
+  if (!state.rooms[state.currentRoomIdx]) return;
+  const h = autoHeights(state.rooms[state.currentRoomIdx]);
+  const type = state.currentCabType;
+  document.getElementById('cabHPreview').textContent = `${h[type]}mm (from room settings)`;
+}
+
+function togOpt(el) {
+  const row = el.parentElement;
+  row.querySelectorAll('.tog').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function addCabinet() {
+  const room   = state.rooms[state.currentRoomIdx];
+  const wall   = room.walls[state.currentWallIdx];
+  const h      = autoHeights(room);
+  const type   = state.currentCabType;
+  const label  = document.getElementById('cabLabel').value.trim();
+  const width  = +document.getElementById('cabW').value;
+  const depth  = +document.getElementById('cabD').value || (type === 'wall' ? room.wallDepth : room.baseDepth);
+
+  if (!width) { alert('Please enter a width.'); return; }
+
+  const customH = state.heightMode === 'custom' ? (+document.getElementById('cabH').value || null) : null;
+
+  const cab = {
+    label:        label || `${type.charAt(0).toUpperCase()+type.slice(1)} Unit`,
+    type,
+    units:        +document.getElementById('cabUnits').value || 1,
+    width,
+    depth,
+    customHeight: customH,
+    carcass:      document.getElementById('cabCarcass').value,
+    external:     document.getElementById('cabExternal').value,
+    hinge:        document.getElementById('cabHinge').value,
+    handle:       document.getElementById('cabHandle').value,
+    doors:        +document.getElementById('cabDoors').value || 0,
+    drawers:      +document.getElementById('cabDrawers').value || 0,
+    shelves:      +document.getElementById('cabShelves').value || 1,
+  };
+
+  if (state.editingCabIdx !== null) {
+    wall.cabinets[state.editingCabIdx] = cab;
+    state.editingCabIdx = null;
+    document.getElementById('addCabTitle').textContent = '+ Add Cabinet';
+  } else {
+    wall.cabinets.push(cab);
+  }
+
+  clearCabForm();
+  renderCabList();
+  updateSidebarNav();
+}
+
+function editCab(i) {
+  const room = state.rooms[state.currentRoomIdx];
+  const wall = room.walls[state.currentWallIdx];
+  const c    = wall.cabinets[i];
+  state.editingCabIdx = i;
+  document.getElementById('addCabTitle').textContent = `✎ Edit Cabinet — ${c.label}`;
+  document.getElementById('cabLabel').value   = c.label;
+  document.getElementById('cabUnits').value   = c.units;
+  document.getElementById('cabW').value       = c.width;
+  document.getElementById('cabD').value       = c.depth;
+  document.getElementById('cabDoors').value   = c.doors;
+  document.getElementById('cabDrawers').value = c.drawers;
+  document.getElementById('cabShelves').value = c.shelves;
+  document.getElementById('cabCarcass').value = c.carcass;
+  document.getElementById('cabExternal').value= c.external;
+  document.getElementById('cabHinge').value   = c.hinge;
+  document.getElementById('cabHandle').value  = c.handle;
+  setType(c.type, document.querySelectorAll('#addCabPanel .tog')[['base','wall','tall'].indexOf(c.type)]);
+  if (c.customHeight) { setHeightMode('custom'); document.getElementById('cabH').value = c.customHeight; }
+  else setHeightMode('auto');
+  document.getElementById('addCabPanel').scrollIntoView({ behavior:'smooth' });
+}
+
+function deleteCab(i) {
+  const wall = state.rooms[state.currentRoomIdx].walls[state.currentWallIdx];
+  if (confirm(`Delete "${wall.cabinets[i].label}"?`)) {
+    wall.cabinets.splice(i, 1);
+    renderCabList();
+    updateSidebarNav();
+  }
+}
+
+function clearCabForm() {
+  document.getElementById('cabLabel').value   = '';
+  document.getElementById('cabUnits').value   = '1';
+  document.getElementById('cabW').value       = '';
+  document.getElementById('cabD').value       = '';
+  document.getElementById('cabDoors').value   = '1';
+  document.getElementById('cabDrawers').value = '0';
+  document.getElementById('cabShelves').value = '1';
+  setHeightMode('auto');
+  state.editingCabIdx = null;
+  document.getElementById('addCabTitle').textContent = '+ Add Cabinet';
+}
+
+// ════════════════════════════════════════
+// CALCULATION ENGINE
+// ════════════════════════════════════════
+function calcCabinet(cab, room) {
+  const h      = autoHeights(room);
+  const height = cab.customHeight || h[cab.type];
+  const W      = cab.width;
+  const D      = cab.depth;
+  const H      = height;
+  const T      = BOARD_T;
+  const iW     = W - 2*T;
+  const units  = cab.units;
+
+  // --- PANELS ---
+  const panels = [];
+  const addPanel = (name, w, ht, qty, edging, mat) => panels.push({ name, w, h:ht, qty:qty*units, edging, mat });
+
+  // CARCASS
+  addPanel('Sides',    D,   H,    2, '1L', cab.carcass);
+  addPanel('Base',     iW,  D,    1, '1L', cab.carcass);
+  addPanel('Top Rail', iW,  RAIL_H, 1, '1L', cab.carcass);
+  addPanel('Back Rail',iW,  RAIL_H, 1, 'NONE', cab.carcass);
+  if (cab.type === 'wall' || cab.type === 'tall') addPanel('Top', iW, D, 1, '1L', cab.carcass);
+  for (let i=1;i<=cab.shelves;i++) addPanel(`Shelf ${i}`, iW, D-T, 1, '1L', cab.carcass);
+
+  // EXTERNALS
+  if (cab.doors > 0) {
+    const dW = Math.floor((W - DOOR_GAP) / cab.doors);
+    const dH = H - DOOR_GAP;
+    addPanel('Door', dW, dH, cab.doors, 'EAR', cab.external);
+  }
+  if (cab.backboard !== false) addPanel('Back Board', iW, H-T, 1, '1S', 'PGB-BB3');
+
+  // --- HARDWARE ---
+  const hingeQty  = (H > 1200 ? 3 : 2) * cab.doors * units;
+  const hingeP    = HINGE_PRICES[cab.hinge] || 8;
+  const runnerQty = cab.drawers * units;
+  const runnerP   = D <= 450 ? 85 : D <= 550 ? 95 : 100;
+  const handleQty = (cab.doors + cab.drawers) * units;
+  const handleP   = HANDLE_PRICES[cab.handle] || 45;
+  const pinQty    = cab.shelves * 4 * units;
+  const screwQty  = units;
+  const hwTotal   = hingeQty*hingeP + runnerQty*runnerP + handleQty*handleP + pinQty*2 + screwQty*45;
+
+  // --- BOARD COST ---
+  let boardCost = 0, edgingCost = 0;
+  const sheetArea = (2750*1830)/1e6;
+  for (const p of panels) {
+    const mat  = MATERIALS[p.mat];
+    if (!mat) continue;
+    const cpSqm = mat.cost / sheetArea;
+    const area  = (p.w * p.h / 1e6) * p.qty;
+    boardCost += area * cpSqm;
+    const edgeM = p.edging === 'EAR' ? 2*(p.w+p.h)/1000*p.qty
+                : p.edging === 'NONE' ? 0
+                : Math.max(p.w,p.h)/1000*p.qty;
+    edgingCost += edgeM * (mat.edging || 0);
+  }
+
+  const labourRate = +(document.getElementById('labourRate')?.value || 310);
+  const labour     = (W/1000) * units * labourRate;
+  const wastage    = +(document.getElementById('wastageRate')?.value || 20)/100;
+  const profit     = +(document.getElementById('profitRate')?.value  || 30)/100;
+  const comm       = +(document.getElementById('commRate')?.value    || 10)/100;
+
+  const boardWithWastage = (boardCost + edgingCost) * (1+wastage);
+  const profitAmt  = boardWithWastage * profit;
+  const commAmt    = boardWithWastage * comm;
+  const otherAmt   = boardWithWastage * 0.1;
+  const total      = boardWithWastage + hwTotal + labour + profitAmt + commAmt + otherAmt;
+
+  return { panels, hwTotal, boardCost, edgingCost, boardWithWastage, labour, profitAmt, commAmt, otherAmt, total, height };
+}
+
+function R(n) { return 'R ' + (+n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,''); }
+
+// ════════════════════════════════════════
+// CALCULATE ALL
+// ════════════════════════════════════════
+function calculateAll() {
+  if (!state.rooms.length) { alert('Add at least one room first.'); return; }
+
+  let totalCabs=0, totalBoard=0, totalHW=0, totalLabour=0, grandTotal=0;
+
+  // ── QUOTATION PAGE ──
+  const quoteRooms = document.getElementById('quoteRooms');
+  quoteRooms.innerHTML = '';
+  document.getElementById('quoteClient').textContent = document.getElementById('clientName').value || 'No client set';
+
+  state.rooms.forEach((room, ri) => {
+    let roomTotal = 0;
+    let roomBlock = `<div class="room-block open" id="rb-${ri}">
+      <div class="room-block-header" onclick="toggleBlock('rb-${ri}')">
+        <span class="chevron">▶</span>
+        <span class="room-block-title">${room.name.toUpperCase()}</span>`;
+
+    let roomBody = '';
+    room.walls.forEach((wall, wi) => {
+      if (!wall.cabinets.length) return;
+      let wallTotal = 0;
+      let wallRows  = '';
+      wall.cabinets.forEach((cab, ci) => {
+        const res = calcCabinet(cab, room);
+        roomTotal  += res.total;
+        wallTotal  += res.total;
+        totalCabs++;
+        totalBoard  += res.boardWithWastage;
+        totalHW     += res.hwTotal;
+        totalLabour += res.labour;
+        grandTotal  += res.total;
+
+        wallRows += `
+          <div class="summary-row"><span class="lbl">${cab.label} ×${cab.units} — ${cab.width}W×${cab.depth}D×${res.height}Hmm</span><span class="val" style="color:var(--t3)"></span></div>
+          <div class="summary-row"><span class="lbl" style="padding-left:16px">Board + Wastage</span><span class="val">${R(res.boardWithWastage)}</span></div>
+          <div class="summary-row"><span class="lbl" style="padding-left:16px">Hardware</span><span class="val">${R(res.hwTotal)}</span></div>
+          <div class="summary-row"><span class="lbl" style="padding-left:16px">Labour</span><span class="val">${R(res.labour)}</span></div>
+          <div class="summary-row"><span class="lbl" style="padding-left:16px">Profit + Comm + Other</span><span class="val">${R(res.profitAmt+res.commAmt+res.otherAmt)}</span></div>
+          <div class="summary-row total"><span class="lbl">${cab.label} Total</span><span class="val">${R(res.total)}</span></div>`;
+      });
+
+      if (!wallRows) return;
+      roomBody += `
+        <div class="wall-group open">
+          <div class="wall-group-header" onclick="this.parentElement.classList.toggle('open');this.nextElementSibling.style.display=this.parentElement.classList.contains('open')?'block':'none'">
+            <span style="width:4px;height:4px;border-radius:50%;background:var(--acc);display:inline-block"></span>
+            <span class="wall-group-name">${wall.name}</span>
+            <span class="wall-group-sub">${R(wallTotal)}</span>
+          </div>
+          <div class="wall-group-body">${wallRows}</div>
+        </div>`;
+    });
+
+    roomBlock += `<span class="room-block-total">${R(roomTotal)}</span></div>
+      <div class="room-block-body">${roomBody}
+        <div class="summary-row total" style="font-size:13px"><span class="lbl">${room.name} Total</span><span class="val">${R(roomTotal)}</span></div>
+      </div></div>`;
+    quoteRooms.innerHTML += roomBlock;
+  });
+
+  document.getElementById('gtRooms').textContent  = state.rooms.length;
+  document.getElementById('gtCabs').textContent   = totalCabs;
+  document.getElementById('gtBoard').textContent  = R(totalBoard);
+  document.getElementById('gtHW').textContent     = R(totalHW);
+  document.getElementById('gtLabour').textContent = R(totalLabour);
+  document.getElementById('gtTotal').textContent  = R(grandTotal);
+
+  // ── CUTTING LIST PAGE ──
+  renderCuttingList(room => room);
+
+  // ── HARDWARE LIST PAGE ──
+  renderHardwareList();
+
+  state.calculated = true;
+  nav('quote');
+}
+
+// ════════════════════════════════════════
+// CUTTING LIST
+// ════════════════════════════════════════
+function renderCuttingList() {
+  // Collect all panels grouped by material
+  const matGroups = {};
+
+  state.rooms.forEach(room => {
+    room.walls.forEach(wall => {
+      wall.cabinets.forEach(cab => {
+        const res = calcCabinet(cab, room);
+        res.panels.forEach(p => {
+          const mat = MATERIALS[p.mat];
+          const key = p.mat;
+          if (!matGroups[key]) matGroups[key] = { matName: mat?.name || p.mat, panels:[] };
+          // Try to merge identical panels
+          const existing = matGroups[key].panels.find(e => e.name===p.name && e.w===p.w && e.h===p.h && e.edging===p.edging);
+          if (existing) { existing.qty += p.qty; existing.cabs.push(cab.label); }
+          else matGroups[key].panels.push({ ...p, cabs:[cab.label] });
+        });
+      });
+    });
+  });
+
+  const content = document.getElementById('cutlistContent');
+  content.innerHTML = '';
+
+  Object.entries(matGroups).forEach(([matKey, group]) => {
+    const totalPanels = group.panels.reduce((s,p)=>s+p.qty,0);
+    const sheetA = (2750*1830)/1e6;
+    const totalArea = group.panels.reduce((s,p)=>s+(p.w*p.h/1e6)*p.qty,0);
+    const sheets = Math.ceil(totalArea*1.2 / sheetA);
+
+    let rows = group.panels.map((p,i) => `
+      <tr>
+        <td>${p.name}</td>
+        <td><input class="inline" value="${p.w}" onchange="updateCutPanel('${matKey}',${i},'w',this.value)"/>mm</td>
+        <td><input class="inline" value="${p.h}" onchange="updateCutPanel('${matKey}',${i},'h',this.value)"/>mm</td>
+        <td><input class="inline" value="${p.qty}" style="width:40px" onchange="updateCutPanel('${matKey}',${i},'qty',this.value)"/></td>
+        <td>${p.edging}</td>
+        <td class="muted" style="font-size:9px">${[...new Set(p.cabs)].join(', ')}</td>
+        <td><button class="icon-btn del sm" onclick="deleteCutPanel('${matKey}',${i})">✕</button></td>
+      </tr>`).join('');
+
+    content.innerHTML += `
+      <div class="hw-group">
+        <div class="hw-group-header">
+          <div class="hw-group-title">${group.matName}</div>
+          <div style="font-family:var(--fm);font-size:10px;color:var(--t3);margin-left:auto">${totalPanels} panels · ${totalArea.toFixed(3)} m² · ~${sheets} sheets (inc. 20% wastage)</div>
+        </div>
+        <div class="hw-group-body">
+          <table class="tbl" id="tbl-cut-${matKey}">
+            <thead><tr><th>Panel</th><th>Width</th><th>Height</th><th>Qty</th><th>Edging</th><th>Cabinets</th><th></th></tr></thead>
+            <tbody id="tbody-cut-${matKey}">${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
+  // Store for edits
+  window._cutGroups = matGroups;
+}
+
+function updateCutPanel(matKey, i, field, val) {
+  window._cutGroups[matKey].panels[i][field] = field==='qty'||field==='w'||field==='h' ? +val : val;
+}
+function deleteCutPanel(matKey, i) {
+  window._cutGroups[matKey].panels.splice(i,1);
+  renderCuttingList();
+}
+function addCutPanel() {
+  const matKey = prompt('Material code (e.g. PGB-GW):');
+  if (!matKey || !MATERIALS[matKey]) { alert('Unknown material code. Check your materials list.'); return; }
+  if (!window._cutGroups) window._cutGroups = {};
+  if (!window._cutGroups[matKey]) window._cutGroups[matKey] = { matName:MATERIALS[matKey].name, panels:[] };
+  window._cutGroups[matKey].panels.push({ name:'Custom Panel', w:0, h:0, qty:1, edging:'1L', cabs:['Manual'] });
+  renderCuttingList();
+}
+
+// ════════════════════════════════════════
+// HARDWARE LIST
+// ════════════════════════════════════════
+function renderHardwareList() {
+  const cats = {};
+
+  state.rooms.forEach(room => {
+    room.walls.forEach(wall => {
+      wall.cabinets.forEach(cab => {
+        const res = calcCabinet(cab, room);
+        const H   = res.height;
+        const u   = cab.units;
+
+        const addHW = (cat, item, qty, price, note) => {
+          if (!cats[cat]) cats[cat] = [];
+          const ex = cats[cat].find(e=>e.item===item);
+          if (ex) ex.qty += qty;
+          else cats[cat].push({ item, qty, price, total:qty*price, note });
+        };
+
+        const hQty = (H>1200?3:2)*cab.doors*u;
+        const hP   = HINGE_PRICES[cab.hinge]||8;
+        addHW('Hinges', cab.hinge==='normal'?'Normal Hinge':'Soft Close Hinge', hQty, hP, `${cab.label}`);
+
+        if (cab.drawers>0) {
+          const rQty = cab.drawers*u;
+          const rP   = cab.depth<=450?85:cab.depth<=550?95:100;
+          addHW('Runners', `Soft Close Runner ${cab.depth<=450?'400':cab.depth<=550?'500':'600'}mm Pair`, rQty, rP, `${cab.label}`);
+        }
+
+        if (cab.handle !== 'none') {
+          const hdlQty = (cab.doors+cab.drawers)*u;
+          const hdlP   = HANDLE_PRICES[cab.handle]||45;
+          const hdlName = cab.handle==='gola'?'Gola Profile (3m)':cab.handle==='handle128mm'?'Handle 128mm':'Handle 192mm';
+          addHW('Handles', hdlName, hdlQty, hdlP, `${cab.label}`);
+        }
+
+        addHW('Shelf Pins', 'Shelf Support Pin 5mm', cab.shelves*4*u, 2, `${cab.label}`);
+        addHW('Fasteners', 'Cabinet Screw Box 200', u, 45, `${cab.label}`);
+      });
+    });
+  });
+
+  const content = document.getElementById('hardwareContent');
+  content.innerHTML = '';
+  let hwGrand = 0;
+
+  Object.entries(cats).forEach(([cat, items]) => {
+    const catTotal = items.reduce((s,i)=>s+i.qty*i.price,0);
+    hwGrand += catTotal;
+    const rows = items.map((item,i)=>`
+      <tr>
+        <td>${item.item}</td>
+        <td><input class="inline" value="${item.qty}" style="width:50px" onchange="updateHWItem('${cat}',${i},this.value)"/></td>
+        <td class="mono">R ${item.price.toFixed(2)}</td>
+        <td class="acc">R ${(item.qty*item.price).toFixed(2)}</td>
+        <td class="muted" style="font-size:9px">${item.note||''}</td>
+        <td><button class="icon-btn del sm" onclick="deleteHWItem('${cat}',${i})">✕</button></td>
+      </tr>`).join('');
+
+    content.innerHTML += `
+      <div class="hw-group">
+        <div class="hw-group-header">
+          <div class="hw-group-title">${cat.toUpperCase()}</div>
+          <div style="font-family:var(--fm);font-size:11px;color:var(--acc2);margin-left:auto">${R(catTotal)}</div>
+        </div>
+        <div class="hw-group-body">
+          <table class="tbl">
+            <thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Cabinet</th><th></th></tr></thead>
+            <tbody id="tbody-hw-${cat}">${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
+  content.innerHTML += `<div style="display:flex;justify-content:flex-end;padding:12px 0"><div style="font-family:var(--fd);font-size:20px;letter-spacing:2px">HARDWARE TOTAL: <span style="color:var(--acc)">${R(hwGrand)}</span></div></div>`;
+  window._hwCats = cats;
+}
+
+function updateHWItem(cat, i, val) {
+  window._hwCats[cat][i].qty = +val;
+}
+function deleteHWItem(cat, i) {
+  window._hwCats[cat].splice(i,1);
+  renderHardwareList();
+}
+function addHWItem() {
+  const cat  = prompt('Category (e.g. Hinges, Runners):');
+  const item = prompt('Item name:');
+  const qty  = +prompt('Quantity:');
+  const price= +prompt('Unit price (R):');
+  if (!cat||!item||!qty||!price) return;
+  if (!window._hwCats) window._hwCats = {};
+  if (!window._hwCats[cat]) window._hwCats[cat] = [];
+  window._hwCats[cat].push({ item, qty, price, total:qty*price, note:'Manual' });
+  renderHardwareList();
+}
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function toggleBlock(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function saveJob() {
+  const data = JSON.stringify({ client:{ name:document.getElementById('clientName').value, phone:document.getElementById('clientPhone').value, email:document.getElementById('clientEmail').value, addr:document.getElementById('clientAddr').value, ref:document.getElementById('jobRef').value }, settings:{ labourRate:document.getElementById('labourRate').value, wastageRate:document.getElementById('wastageRate').value, profitRate:document.getElementById('profitRate').value }, rooms:state.rooms }, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = (document.getElementById('clientName').value||'job') + '_cabinet_job.json';
+  a.click();
+}
+
+function loadJob() {
+  const input = document.createElement('input');
+  input.type  = 'file';
+  input.accept= '.json';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const data = JSON.parse(ev.target.result);
+      if (data.client) {
+        document.getElementById('clientName').value  = data.client.name||'';
+        document.getElementById('clientPhone').value = data.client.phone||'';
+        document.getElementById('clientEmail').value = data.client.email||'';
+        document.getElementById('clientAddr').value  = data.client.addr||'';
+        document.getElementById('jobRef').value      = data.client.ref||'';
+      }
+      state.rooms = data.rooms || [];
+      updateSidebarNav();
+      nav('job');
+      alert('Job loaded successfully.');
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+// ════════════════════════════════════════
+// PDF EXPORT — replaces the placeholder exportPDF() stub
+// Paste this block in place of the existing exportPDF function
+// in cabinet-builder.html (around line 1377)
+// ════════════════════════════════════════
+
+// Build the payload that generatePDF.py expects
+function buildPDFPayload() {
+  if (!state.calculated) {
+    alert('Please run Calculate All before exporting a PDF.');
+    return null;
+  }
+
+  const clientName  = document.getElementById('clientName').value.trim()  || 'Client';
+  const labourRate  = +(document.getElementById('labourRate')?.value  || 310);
+  const wastageRate = +(document.getElementById('wastageRate')?.value || 20) / 100;
+  const profitRate  = +(document.getElementById('profitRate')?.value  || 30) / 100;
+  const commRate    = +(document.getElementById('commRate')?.value    || 10) / 100;
+
+  const cabinets = [];
+  let grandTotals = { boardRaw:0, boardWastage:0, hardware:0, labour:0, profit:0, commission:0, other:0, grandTotal:0 };
+
+  state.rooms.forEach(room => {
+    const heights = autoHeights(room);
+    room.walls.forEach(wall => {
+      wall.cabinets.forEach(cab => {
+        const res    = calcCabinet(cab, room);
+        const height = cab.customHeight || heights[cab.type];
+
+        // Build cut list in the format generatePDF.py expects
+        const cutList = res.panels.map(p => ({
+          panel:  p.name,
+          width:  p.w,
+          height: p.h,
+          qty:    p.qty,
+          edging: p.edging,
+          note:   MATERIALS[p.mat]?.name || p.mat,
+        }));
+
+        // Summary numbers
+        const boardCostRaw        = res.boardCost;
+        const boardCostWithWastage= res.boardWithWastage;
+        const hardwareCost        = res.hwTotal;
+        const labourCost          = res.labour;
+        const profit              = res.profitAmt;
+        const commission          = res.commAmt;
+        const other               = res.otherAmt;
+        const grandTotal          = res.total;
+
+        const fmt = n => 'R ' + (+n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+        cabinets.push({
+          label:    `${room.name} — ${wall.name} — ${cab.label}`,
+          unitType: cab.type,
+          numUnits: cab.units,
+          widthMM:  cab.width,
+          depthMM:  cab.depth,
+          heightMM: height,
+          cutList,
+          quote: {
+            summary: { boardCostRaw, boardCostWithWastage, hardwareCost, labourCost, profit, commission, other, grandTotal },
+            formatted: {
+              boardCostRaw:        fmt(boardCostRaw),
+              boardCostWithWastage:fmt(boardCostWithWastage),
+              hardwareCost:        fmt(hardwareCost),
+              labourCost:          fmt(labourCost),
+              profit:              fmt(profit),
+              commission:          fmt(commission),
+              other:               fmt(other),
+              grandTotal:          fmt(grandTotal),
+            },
+          },
+        });
+
+        grandTotals.boardRaw     += boardCostRaw;
+        grandTotals.boardWastage += boardCostWithWastage;
+        grandTotals.hardware     += hardwareCost;
+        grandTotals.labour       += labourCost;
+        grandTotals.profit       += profit;
+        grandTotals.commission   += commission;
+        grandTotals.other        += other;
+        grandTotals.grandTotal   += grandTotal;
+      });
+    });
+  });
+
+  // Build master cut list (merge identical panels across all cabinets)
+  const masterMap = {};
+  cabinets.forEach(cab => {
+    cab.cutList.forEach(p => {
+      const key = `${p.panel}|${p.width}|${p.height}|${p.edging}`;
+      if (!masterMap[key]) {
+        masterMap[key] = { ...p, qty: 0, cabinets: [] };
+      }
+      masterMap[key].qty += p.qty;
+      if (!masterMap[key].cabinets.includes(cab.label)) {
+        masterMap[key].cabinets.push(cab.label);
+      }
+    });
+  });
+  const masterCutList = Object.values(masterMap);
+
+  return {
+    job:    { name: clientName },
+    cabinets,
+    totals: grandTotals,
+    transport: null,
+    masterCutList,
+  };
+}
+
+// Trigger PDF generation via the Node server
+async function exportPDF(type) {
+  const payload = buildPDFPayload();
+  if (!payload) return;
+
+  // Show loading state on all export buttons
+  const btns = document.querySelectorAll('[onclick^="exportPDF"]');
+  const origLabels = [];
+  btns.forEach((b, i) => { origLabels[i] = b.textContent; b.textContent = 'Generating…'; b.disabled = true; });
+
+  try {
+    const res = await fetch('/api/generate-pdf', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type, payload }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Unknown server error');
+    }
+
+    // Trigger browser download
+    const blob     = await res.blob();
+    const url      = URL.createObjectURL(blob);
+    const a        = document.createElement('a');
+    const filename = (document.getElementById('clientName').value.trim() || 'cabinet') + `_${type}.pdf`;
+    a.href         = url;
+    a.download     = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+  } catch (err) {
+    alert('PDF export failed:\n' + err.message + '\n\nMake sure server.js is running:\n  node server.js');
+  } finally {
+    btns.forEach((b, i) => { b.textContent = origLabels[i]; b.disabled = false; });
+  }
+}
+
+// Init
+updateHeightPreview();
+</script>
+</body>
+</html>
